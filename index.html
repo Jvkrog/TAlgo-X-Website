@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAlgo-X — Autonomous Trading Infrastructure</title>
+<meta name="description" content="TAlgo-X: build, backtest, deploy, and operate algorithmic trading systems from a single CLI.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0: #070A08;
+    --bg-1: rgba(255,255,255,0.08);
+    --bg-1-hover: rgba(255,255,255,0.11);
+    --bg-2: rgba(255,255,255,0.06);
+    --line: rgba(255,255,255,0.16);
+    --line-soft: rgba(255,255,255,0.14);
+    --green: #35F58A;
+    --green-bright: #5CFAA4;
+    --green-deep: #0E3B23;
+    --white: #EDF2EF;
+    --mute: #9CA9A2;
+    --mute-2: #7C8B84;
+    --dim: #5E6B64;
+    --amber: #E8C468;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:var(--bg-0);
+    color:var(--white);
+    font-family:'Manrope', sans-serif;
+    position:relative;
+  }
+  a{ color:inherit; text-decoration:none; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .wrap{ max-width:1152px; margin:0 auto; padding:0 20px; }
+  @media (min-width:768px){ .wrap{ padding:0 32px; } }
+
+  /* ---------------- ambient glow ---------------- */
+  .ambient{ position:fixed; inset:0; z-index:-10; overflow:hidden; pointer-events:none; }
+  .glow{ position:absolute; border-radius:50%; filter:blur(90px); }
+  .glow1{ top:-128px; left:10%; width:720px; height:720px; opacity:.32; background:radial-gradient(circle, var(--green) 0%, transparent 68%); animation:drift1 22s ease-in-out infinite; }
+  .glow2{ top:30%; right:-208px; width:680px; height:680px; opacity:.22; background:radial-gradient(circle, var(--green) 0%, transparent 68%); animation:drift2 26s ease-in-out infinite; }
+  .glow3{ bottom:-10%; left:-8%; width:620px; height:620px; opacity:.18; background:radial-gradient(circle, var(--amber) 0%, transparent 68%); animation:drift3 30s ease-in-out infinite; }
+  .glow4{ top:8%; left:50%; transform:translateX(-50%); width:560px; height:360px; opacity:.16; background:radial-gradient(circle, var(--green) 0%, transparent 70%); }
+  @keyframes drift1{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(40px,60px) scale(1.08)} }
+  @keyframes drift2{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-50px,-30px) scale(1.06)} }
+  @keyframes drift3{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.1)} }
+  @media (prefers-reduced-motion: reduce){ .glow1,.glow2,.glow3{ animation:none; } }
+
+  /* ---------------- glass utility ---------------- */
+  .glass{
+    border:1px solid var(--line);
+    background:var(--bg-1);
+    backdrop-filter:blur(24px);
+    -webkit-backdrop-filter:blur(24px);
+    border-radius:12px;
+  }
+  .icon{ display:inline-flex; }
+  .icon svg{ width:1em; height:1em; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* ---------------- reveal-on-scroll ---------------- */
+  .reveal{
+    filter:blur(14px);
+    opacity:0;
+    transform:translateY(18px);
+    transition:filter .9s cubic-bezier(.2,.7,.2,1), opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.in{ filter:blur(0); opacity:1; transform:translateY(0); }
+  @media (prefers-reduced-motion: reduce){ .reveal{ transition:none; filter:blur(0); opacity:1; transform:none; } }
+
+  /* ---------------- navbar ---------------- */
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    background:rgba(7,10,8,0.6);
+    border-bottom:1px solid var(--line-soft);
+    box-shadow:0 1px 0 0 rgba(53,245,138,0.06);
+  }
+  .nav-inner{ height:64px; display:flex; align-items:center; justify-content:space-between; }
+  .brand{ display:flex; align-items:center; gap:8px; }
+  .brand .mark{ color:var(--green); font-size:18px; }
+  .brand .name{ font-weight:600; font-size:15px; letter-spacing:-0.01em; }
+  .nav-links{ display:none; align-items:center; gap:28px; }
+  .nav-links a{ font-size:13.5px; color:var(--mute); transition:color .15s; }
+  .nav-links a:hover{ color:var(--white); }
+  .nav-right{ display:none; align-items:center; gap:12px; }
+  .nav-right a.gh{ display:flex; align-items:center; gap:6px; font-size:13px; color:var(--mute); }
+  .nav-right a.gh:hover{ color:var(--white); }
+  .btn-primary{
+    font-size:13px; font-weight:500; background:var(--green); color:#062114;
+    padding:9px 15px; border-radius:6px; transition:background .15s;
+  }
+  .btn-primary:hover{ background:var(--green-bright); }
+  .btn-outline{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:13.5px; font-weight:500; color:var(--white);
+    border:1px solid var(--line); padding:10px 16px; border-radius:6px;
+    transition:border-color .15s;
+  }
+  .btn-outline:hover{ border-color:rgba(53,245,138,0.5); }
+  .btn-text{ display:inline-flex; align-items:center; gap:8px; font-size:13.5px; color:var(--mute); padding:10px 8px; transition:color .15s; }
+  .btn-text:hover{ color:var(--white); }
+  .nav-toggle{ display:flex; background:none; border:none; color:var(--white); cursor:pointer; padding:4px; }
+  .nav-mobile{ display:none; border-top:1px solid var(--line-soft); background:rgba(7,10,8,0.7); backdrop-filter:blur(24px); padding:16px 20px; flex-direction:column; gap:16px; }
+  .nav-mobile.open{ display:flex; }
+  .nav-mobile a{ font-size:14px; color:var(--mute); }
+  .nav-mobile a.cta{ color:var(--green); font-weight:500; }
+  @media (min-width:768px){
+    .nav-links{ display:flex; }
+    .nav-right{ display:flex; }
+    .nav-toggle{ display:none; }
+  }
+
+  /* ---------------- hero ---------------- */
+  .hero{ padding:56px 0 72px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  @media (min-width:768px){ .hero{ padding:72px 0 96px; } }
+
+  .hero-logo-mega{ width:100%; display:flex; justify-content:center; margin-bottom:36px; }
+  .logo-window--mega{ width:100%; max-width:920px; }
+  .logo-screen--mega{ padding:36px 20px 32px; text-align:center; }
+  @media (min-width:768px){ .logo-screen--mega{ padding:56px 24px 48px; } }
+  .logo-wordmark--mega{ font-size:clamp(40px, 13vw, 128px) !important; }
+
+  .hero-copy{ max-width:640px; display:flex; flex-direction:column; align-items:center; }
+  .badge{ display:inline-flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--bg-2); backdrop-filter:blur(18px); border-radius:999px; padding:5px 12px; margin:0 0 24px; }
+  .badge span{ font-size:12px; color:var(--mute); }
+  .hero h1{ font-size:28px; line-height:1.16; font-weight:700; letter-spacing:-0.015em; margin:0 0 18px; }
+  @media (min-width:640px){ .hero h1{ font-size:36px; } }
+  @media (min-width:768px){ .hero h1{ font-size:44px; } }
+  .hero p.tagline{ font-size:15.5px; color:var(--mute); max-width:46ch; line-height:1.6; margin:0; }
+  .hero-links{ margin-top:28px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; }
+  .hero-links .btn-primary{ display:inline-flex; align-items:center; gap:8px; padding:10px 16px; }
+
+  .term-wrap--mini{ margin-top:56px; width:100%; max-width:420px; }
+  .term-wrap--mini .term-body{ min-height:auto; padding:16px; font-size:12px; }
+
+  .logo-window{ background:#000; border:1px solid var(--line); border-radius:8px; overflow:hidden; display:inline-block; }
+  .logo-bar{ display:flex; align-items:center; gap:8px; padding:6px 10px; background:rgba(255,255,255,0.03); font-size:11px; color:#8a938a; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .logo-bar .ic{ color:var(--green); font-weight:700; }
+  .logo-bar .nm{ flex:1; }
+  .logo-bar .ctl{ display:flex; gap:10px; font-size:12px; color:#6b746b; }
+  .logo-screen{ padding:16px 16px 14px; background:#000; overflow-x:auto; }
+  .logo-wordmark{ position:relative; display:inline-block; white-space:nowrap; font-weight:800; font-size:clamp(22px,4vw,40px); letter-spacing:-0.01em; line-height:1; text-transform:uppercase; }
+  .logo-wordmark .shadow, .logo-wordmark .main{ display:block; }
+  .logo-wordmark .shadow{
+    position:absolute; top:0; left:0; color:rgba(53,245,138,0.28);
+    transform:translate(6px,6px); z-index:1;
+    animation:shadowGrow 1.3s cubic-bezier(.2,.7,.3,1) both; animation-delay:.15s;
+  }
+  .logo-wordmark .main{
+    position:relative; z-index:2; color:var(--green-bright);
+    text-shadow:0 0 14px rgba(53,245,138,0.45), 0 0 2px rgba(53,245,138,0.6);
+    animation:flicker 1s steps(1,end) both;
+  }
+  @keyframes shadowGrow{ 0%{transform:translate(0,0);opacity:0} 100%{transform:translate(6px,6px);opacity:1} }
+  @keyframes flicker{ 0%{opacity:0} 6%{opacity:1} 9%{opacity:.15} 14%{opacity:1} 18%{opacity:.3} 26%{opacity:1} 100%{opacity:1} }
+  @media (prefers-reduced-motion: reduce){
+    .logo-wordmark .shadow, .logo-wordmark .main{ animation:none; opacity:1; }
+    .logo-wordmark .shadow{ transform:translate(6px,6px); }
+  }
+
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; }
+
+  .term-wrap{ position:relative; }
+  .term-glow{ position:absolute; inset:-20px; z-index:-1; border-radius:32px; opacity:.22; filter:blur(50px); background:radial-gradient(60% 60% at 50% 40%, rgba(53,245,138,0.2) 0%, transparent 70%); }
+  .term{ border-radius:12px; overflow:hidden; box-shadow:0 0 34px -14px rgba(53,245,138,0.16); }
+  .term-bar{ display:flex; align-items:center; gap:6px; padding:12px 16px; border-bottom:1px solid var(--line-soft); background:rgba(255,255,255,0.02); }
+  .term-bar .tdot{ width:10px; height:10px; border-radius:50%; background:#3A423D; }
+  .term-bar .label{ margin-left:12px; font-size:11.5px; color:var(--dim); }
+  .term-body{ padding:20px; font-size:13px; min-height:220px; }
+  .term-body .line{ color:#C7D2CC; margin-bottom:6px; }
+  .term-body .line .prompt{ color:var(--green); margin-right:8px; }
+  .term-extra{ margin-top:12px; color:var(--dim); line-height:1.7; display:none; }
+  .term-extra.show{ display:block; }
+  .term-extra .head{ color:var(--green); }
+  .term-extra .head .v{ color:var(--dim); }
+  .term-extra .row3{ color:#C7D2CC; }
+  .term-extra .row4 .sel{ color:var(--white); }
+
+  /* ---------------- sections ---------------- */
+  section{ padding:80px 0; border-top:1px solid var(--line-soft); }
+  .label{ display:flex; align-items:center; gap:8px; margin-bottom:16px; }
+  .label .sl{ font-size:12px; color:var(--green); }
+  .label .sr{ font-size:12px; text-transform:uppercase; letter-spacing:.12em; color:var(--mute-2); }
+  h2{ font-size:26px; font-weight:600; letter-spacing:-0.01em; margin:0 0 12px; max-width:32ch; }
+  @media (min-width:768px){ h2{ font-size:32px; } }
+  section p.lead{ font-size:14.5px; color:var(--mute); max-width:40ch; line-height:1.6; }
+
+  /* compare (OneBrain + Why TAlgo-X) */
+  .compare-grid{ display:grid; gap:32px; margin-top:44px; max-width:640px; }
+  @media (min-width:640px){ .compare-grid{ grid-template-columns:1fr 1fr; gap:40px; max-width:none; } }
+  .compare-col-label{ font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--mute-2); margin-bottom:18px; }
+  .compare-col-label.green{ color:var(--green); }
+  .compare-col--traditional{ opacity:.72; }
+  .compare-node{
+    display:flex; align-items:center; gap:10px; justify-content:center;
+    border:1px dashed var(--line-soft); border-radius:8px; padding:13px 16px;
+    font-size:13.5px; color:var(--mute); text-align:center;
+  }
+  .compare-col--talgox .compare-node{
+    border:1px solid var(--line); border-style:solid; background:var(--bg-1);
+    backdrop-filter:blur(18px); color:var(--white); font-weight:500;
+  }
+  .compare-node.highlight{ border-color:rgba(53,245,138,.45); color:var(--green); background:rgba(14,59,35,.35); }
+  .compare-connector{ height:22px; width:1px; background:var(--line-soft); margin:2px auto; }
+  .compare-col--talgox .compare-connector{ background:linear-gradient(to bottom, var(--line-soft), rgba(53,245,138,.4)); }
+
+  .compare-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .compare-list li{ font-size:13.5px; padding-left:22px; position:relative; }
+  .compare-list.dim li{ color:var(--mute-2); }
+  .compare-list.dim li::before{ content:"–"; position:absolute; left:0; color:var(--dim); }
+  .compare-list.check li{ color:#C7D2CC; }
+  .compare-list.check li::before{ content:"✓"; position:absolute; left:0; color:var(--green); font-weight:700; }
+
+  /* two-col generic */
+  .two-col{ display:grid; gap:48px; align-items:center; }
+  @media (min-width:768px){ .two-col{ grid-template-columns:1fr 1fr; } }
+
+  /* market scanner */
+  .stats{ display:flex; gap:24px; margin-top:24px; }
+  .stats .n{ font-size:22px; }
+  .stats .n.green{ color:var(--green); }
+  .stats .lbl{ font-size:11.5px; color:var(--mute-2); }
+  .scan-head{ padding:12px 16px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; justify-content:between; justify-content:space-between; }
+  .scan-head .live{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--green); }
+  .scan-head .live .dot{ animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+  .scan-row{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line-soft); font-size:13px; }
+  .scan-row:last-child{ border-bottom:none; }
+  .scan-row .state{ transition:color .5s; }
+  .st-TREND{ color:var(--green); }
+  .st-RANGE{ color:var(--mute-2); }
+  .st-TRANSITION{ color:var(--amber); }
+
+  /* CLI showcase */
+  .cli-grid{ margin-top:40px; display:grid; gap:24px; }
+  @media (min-width:768px){ .cli-grid{ grid-template-columns:200px 1fr; } }
+  .cli-tabs{ display:flex; gap:8px; overflow-x:auto; }
+  @media (min-width:768px){ .cli-tabs{ flex-direction:column; overflow:visible; } }
+  .cli-tab{ text-align:left; font-size:13px; padding:10px 14px; border-radius:6px; white-space:nowrap; border:1px solid transparent; background:var(--bg-2); backdrop-filter:blur(18px); color:var(--mute-2); cursor:pointer; transition:color .15s; }
+  .cli-tab:hover{ color:#C7D2CC; }
+  .cli-tab.active{ background:rgba(14,59,35,0.4); color:var(--green); border-color:rgba(53,245,138,0.3); }
+  .cli-panel .term-body{ min-height:160px; }
+  .cli-panel .line{ margin-bottom:6px; }
+  .cli-panel .line.q{ color:var(--green); }
+  .cli-panel .line.n{ color:#C7D2CC; }
+
+  /* strategies */
+  .tree{ padding:20px; font-size:13px; }
+  .tree .row{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .tree .row.dim{ color:var(--mute-2); }
+  .tree .row.green{ color:var(--green); }
+  .tree .row.mute{ color:var(--dim); }
+  .tree .indent{ margin-left:16px; border-left:1px solid var(--line-soft); padding-left:16px; }
+  .tree .files{ color:#C7D2CC; }
+  .tree .files .row{ margin-bottom:4px; }
+  code.inline{ font-family:'JetBrains Mono', monospace; color:#C7D2CC; background:rgba(14,59,35,0.3); padding:2px 5px; border-radius:4px; }
+  .read-more{ margin-top:24px; display:inline-flex; align-items:center; gap:6px; font-size:13.5px; color:var(--green); transition:gap .15s; }
+  .read-more:hover{ gap:10px; }
+
+  /* runtime */
+  .pill-list{ display:flex; flex-wrap:wrap; gap:12px; margin-top:40px; }
+  .pill{ display:flex; align-items:center; gap:10px; border-radius:999px; padding:10px 16px; transition:background .15s; }
+  .pill:hover{ background:rgba(255,255,255,0.14); }
+  .pill .ic{ color:var(--green); }
+  .pill span.lbl{ font-size:13px; color:#C7D2CC; }
+
+  /* features */
+  .feat-grid{ margin-top:40px; display:grid; gap:1px; background:var(--line-soft); border:1px solid var(--line); border-radius:12px; overflow:hidden; backdrop-filter:blur(24px); }
+  @media (min-width:640px){ .feat-grid{ grid-template-columns:1fr 1fr; } }
+  @media (min-width:1024px){ .feat-grid{ grid-template-columns:1fr 1fr 1fr; } }
+  .feat-cell{ background:var(--bg-2); padding:24px; transition:background .15s; }
+  .feat-cell:hover{ background:rgba(255,255,255,0.11); }
+  .feat-cell .t{ font-size:14px; font-weight:500; margin-bottom:6px; }
+  .feat-cell .d{ font-size:13px; color:var(--mute-2); line-height:1.6; }
+
+  /* roadmap */
+  .roadmap-grid{ display:grid; gap:40px; margin-top:40px; max-width:520px; }
+  @media (min-width:520px){ .roadmap-grid{ grid-template-columns:1fr 1fr; } }
+  .roadmap-col-label{ font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--mute-2); margin-bottom:16px; }
+  .roadmap-col-label.green{ color:var(--green); }
+  .roadmap-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px; }
+  .roadmap-list li{ font-size:14px; padding-left:26px; position:relative; color:#C7D2CC; }
+  .roadmap-list.done li::before{ content:"✓"; position:absolute; left:0; color:var(--green); font-weight:700; }
+  .roadmap-list.planned li{ color:var(--mute-2); }
+  .roadmap-list.planned li::before{ content:"◻"; position:absolute; left:0; color:var(--dim); }
+
+  /* install */
+  .install-panel{ position:relative; padding:32px 24px; text-align:center; overflow:hidden; }
+  @media (min-width:768px){ .install-panel{ padding:48px; } }
+  .install-glow{ position:absolute; top:-96px; left:50%; transform:translateX(-50%); width:420px; height:280px; border-radius:50%; opacity:.3; filter:blur(60px); background:radial-gradient(circle, var(--green) 0%, transparent 70%); z-index:-1; }
+  .install-cmds{ margin-top:32px; display:inline-flex; flex-direction:column; align-items:flex-start; gap:8px; border-radius:8px; padding:16px 24px; background:rgba(7,10,8,0.7); backdrop-filter:blur(18px); font-size:13.5px; }
+  .install-cta{ margin-top:32px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
+
+  footer{ border-top:1px solid var(--line-soft); }
+  .footer-inner{ padding:48px 0; display:flex; flex-direction:column; gap:32px; }
+  @media (min-width:768px){ .footer-inner{ flex-direction:row; align-items:center; justify-content:space-between; gap:0; } }
+  .footer-brand{ display:flex; align-items:center; gap:8px; }
+  .footer-brand .sub{ font-size:12px; color:var(--dim); margin-left:8px; }
+  .footer-links{ display:flex; flex-wrap:wrap; gap:24px; font-size:13px; color:var(--mute-2); }
+  .footer-links a:hover{ color:var(--white); }
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="glow glow1"></div>
+  <div class="glow glow2"></div>
+  <div class="glow glow3"></div>
+  <div class="glow glow4"></div>
+</div>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand">
+      <span class="mark mono">▲</span>
+      <span class="name mono">TAlgo-X</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#onebrain">OneBrain</a>
+      <a href="#why">Why TAlgo-X</a>
+      <a href="#cli">CLI</a>
+      <a href="#strategies">Strategies</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#">Documentation</a>
+    </nav>
+    <div class="nav-right">
+      <a class="gh" href="https://github.com/Jvkrog" target="_blank" rel="noopener">
+        <span class="icon" data-icon="github"></span> GitHub
+      </a>
+      <a class="btn-primary" href="#install">Install CLI</a>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu">
+      <span class="icon" data-icon="layers"></span>
+    </button>
+  </div>
+  <div class="nav-mobile mono" id="navMobile">
+    <a href="#onebrain">OneBrain</a>
+    <a href="#why">Why TAlgo-X</a>
+    <a href="#cli">CLI</a>
+    <a href="#strategies">Strategies</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#">Documentation</a>
+    <a class="cta" href="#install">Install CLI →</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div class="hero-logo-mega">
+      <div class="logo-window logo-window--mega">
+        <div class="logo-bar mono">
+          <span class="ic">&gt;_</span>
+          <span class="nm"></span>
+          <span class="ctl"><span>&#8722;</span><span>&#9633;</span><span>&#10005;</span></span>
+        </div>
+        <div class="logo-screen logo-screen--mega">
+          <div class="logo-wordmark logo-wordmark--mega" aria-label="TALGO-X">
+            <span class="shadow" aria-hidden="true">TALGO-X</span>
+            <span class="main">TALGO-X</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-copy">
+      <div class="badge">
+        <span class="dot"></span>
+        <span class="mono">CLI · Runtime · Scanner · SDK</span>
+      </div>
+      <h1>The operating system for algorithmic trading infrastructure.</h1>
+      <p class="tagline">TAlgo-X is a platform, not a script — a market scanner, a decision layer, a plugin strategy SDK, and a runtime, shipped as one CLI.</p>
+      <div class="hero-links">
+        <a class="btn-primary" href="#install"><span class="icon" data-icon="terminal"></span> Install CLI</a>
+        <a class="btn-outline" href="https://github.com/Jvkrog" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> GitHub</a>
+        <a class="btn-text" href="#"><span class="icon" data-icon="book-open"></span> Documentation</a>
+      </div>
+    </div>
+
+    <div class="term-wrap term-wrap--mini">
+      <div class="term-glow"></div>
+      <div class="term glass">
+        <div class="term-bar">
+          <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+          <span class="label mono">~/workspace</span>
+        </div>
+        <div class="term-body mono" id="heroTerm">
+          <div class="term-extra" id="heroExtra">
+            <div class="head">▲ TALGO-X <span class="v">runtime v0.1</span></div>
+            <div>scanning instruments…</div>
+            <div class="row3">3 qualified → OneBrain</div>
+            <div class="row4">? select mode <span class="sel">Live · Paper · Backtest</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section id="onebrain" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">OneBrain</span></div>
+    <h2>One decision path, not a hardcoded indicator.</h2>
+    <p class="lead">Most bots wire an indicator straight to an order. TAlgo-X puts a dedicated decision layer in between — OneBrain reads the scanner's read on the market and the strategy's intent, and only then does anything reach execution.</p>
+    <div class="compare-grid">
+      <div class="compare-col compare-col--traditional">
+        <div class="compare-col-label mono">Traditional Systems</div>
+        <div class="compare-node">Indicator</div>
+        <div class="compare-connector"></div>
+        <div class="compare-node">Order</div>
+      </div>
+      <div class="compare-col compare-col--talgox">
+        <div class="compare-col-label mono green">TAlgo-X</div>
+        <div class="compare-node"><span class="icon" data-icon="radio"></span> Market Scanner</div>
+        <div class="compare-connector"></div>
+        <div class="compare-node highlight"><span class="icon" data-icon="cpu"></span> OneBrain</div>
+        <div class="compare-connector"></div>
+        <div class="compare-node"><span class="icon" data-icon="file-code"></span> Strategy</div>
+        <div class="compare-connector"></div>
+        <div class="compare-node"><span class="icon" data-icon="activity"></span> Execution</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">Why TAlgo-X</span></div>
+    <h2>Built as a platform, not a script.</h2>
+    <p class="lead">Most retail trading bots are a single strategy wired directly to a broker. TAlgo-X is the infrastructure underneath — one that any strategy can be plugged into.</p>
+    <div class="compare-grid compare-grid--why">
+      <div class="compare-col compare-col--traditional">
+        <div class="compare-col-label mono">Traditional Bot</div>
+        <ul class="compare-list dim">
+          <li>Single strategy</li>
+          <li>Hardcoded</li>
+          <li>Single instrument</li>
+          <li>Manual deployment</li>
+        </ul>
+      </div>
+      <div class="compare-col compare-col--talgox">
+        <div class="compare-col-label mono green">TAlgo-X</div>
+        <ul class="compare-list check">
+          <li>Platform</li>
+          <li>Plugin architecture</li>
+          <li>CLI</li>
+          <li>Market Scanner</li>
+          <li>Backtesting</li>
+          <li>Runtime</li>
+          <li>Configuration Manager</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="scanner" class="reveal">
+  <div class="wrap two-col">
+    <div>
+      <div class="label"><span class="sl mono">//</span><span class="sr mono">Market Scanner</span></div>
+      <h2>Scan before you commit capital.</h2>
+      <p class="lead">TAlgo-X classifies every configured instrument into a market regime before OneBrain ever sees it. Only instruments in a tradeable state get passed downstream — everything else sits out.</p>
+      <div class="stats mono">
+        <div><div class="n green" id="qualifiedCount">0</div><div class="lbl">qualified now</div></div>
+        <div><div class="n" id="trackedCount">0</div><div class="lbl">tracked instruments</div></div>
+      </div>
+    </div>
+    <div class="glass">
+      <div class="scan-head">
+        <span class="mono" style="font-size:11.5px;color:var(--dim);">today's scan</span>
+        <span class="live mono"><span class="dot"></span> live</span>
+      </div>
+      <div class="mono" id="scanRows"></div>
+    </div>
+  </div>
+</section>
+
+<section id="cli" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">CLI</span></div>
+    <h2>Everything runs through one terminal toolbox.</h2>
+    <div class="cli-grid">
+      <div class="cli-tabs mono" id="cliTabs"></div>
+      <div class="cli-panel glass">
+        <div class="term-bar">
+          <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+          <span class="label mono" id="cliPanelLabel">talgox › toolbox</span>
+        </div>
+        <div class="term-body mono" id="cliPanelBody"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="strategies" class="reveal">
+  <div class="wrap two-col">
+    <div>
+      <div class="label"><span class="sl mono">//</span><span class="sr mono">Strategy SDK</span></div>
+      <h2>A strategy is a folder, not a merge conflict.</h2>
+      <p class="lead">Drop a new directory into <code class="inline">strategies/</code>, export a metadata file and a strategy file, and it's picked up automatically. Nothing else in the runtime changes.</p>
+      <a class="read-more mono" href="#">Read the Strategy SDK docs <span class="icon" data-icon="chevron-right"></span></a>
+    </div>
+    <div class="glass tree mono">
+      <div class="row dim"><span class="icon" data-icon="box"></span> strategies/</div>
+      <div class="indent">
+        <div class="row green"><span class="icon" data-icon="box"></span> dpi/</div>
+        <div class="indent files">
+          <div class="row"><span class="icon" data-icon="file-code" style="color:var(--mute-2)"></span> metadata.js</div>
+          <div class="row"><span class="icon" data-icon="file-code" style="color:var(--mute-2)"></span> strategy.js</div>
+        </div>
+      </div>
+      <div class="indent" style="margin-top:8px;">
+        <div class="row mute"><span class="icon" data-icon="box"></span> mean-rev/</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="runtime" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">Runtime</span></div>
+    <h2>Built to stay up, and to say why it didn't.</h2>
+    <div class="pill-list" id="runtimePills"></div>
+  </div>
+</section>
+
+<section id="features" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">Features</span></div>
+    <h2>The full lifecycle, not just execution.</h2>
+    <div class="feat-grid" id="featGrid"></div>
+  </div>
+</section>
+
+
+<section id="roadmap" class="reveal">
+  <div class="wrap">
+    <div class="label"><span class="sl mono">//</span><span class="sr mono">Roadmap</span></div>
+    <h2>Actively shipping.</h2>
+    <p class="lead">This is a working platform under active development, not a finished product.</p>
+    <div class="roadmap-grid">
+      <div>
+        <div class="roadmap-col-label mono green">Shipped</div>
+        <ul class="roadmap-list done">
+          <li>Runtime</li>
+          <li>Toolbox</li>
+          <li>Scanner</li>
+          <li>Strategy SDK</li>
+          <li>CLI Packaging</li>
+        </ul>
+      </div>
+      <div>
+        <div class="roadmap-col-label mono">Planned</div>
+        <ul class="roadmap-list planned">
+          <li>Dashboard</li>
+          <li>SaaS</li>
+          <li>Strategy Marketplace</li>
+          <li>Cloud Runtime</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="reveal">
+  <div class="wrap">
+    <div class="install-panel glass">
+      <div class="install-glow"></div>
+      <h2 style="margin:0 auto; max-width:none;">Install the CLI and run your first scan.</h2>
+      <div class="install-cmds mono">
+        <div><span style="color:var(--green);margin-right:8px;">$</span>npm install -g talgox</div>
+        <div><span style="color:var(--green);margin-right:8px;">$</span>talgox</div>
+      </div>
+      <div class="install-cta">
+        <a class="btn-primary" style="display:inline-flex;align-items:center;gap:8px;" href="https://github.com/Jvkrog" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> View on GitHub</a>
+        <a class="btn-outline" href="#"><span class="icon" data-icon="book-open"></span> Read the docs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand mono">
+      <span style="color:var(--green);">▲</span>
+      <span style="font-weight:600;">TAlgo-X</span>
+      <span class="sub">Autonomous Trading Infrastructure</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/Jvkrog" target="_blank" rel="noopener">GitHub</a>
+      <a href="#">Documentation</a>
+      <a href="#">Research</a>
+      <a href="#">License</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---------------- icon set (simple line icons, lucide-like) ---------------- */
+const ICONS = {
+  terminal: '<svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  github: '<svg viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>',
+  'book-open': '<svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+  'chevron-right': '<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>',
+  layers: '<svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>',
+  radio: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M4.9 19.1a10 10 0 0 1 0-14.2M2 22a15 15 0 0 1 0-20M19.1 4.9a10 10 0 0 1 0 14.2M22 2a15 15 0 0 1 0 20"/></svg>',
+  cpu: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></svg>',
+  'file-code': '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 13l-2 2 2 2M14 13l2 2-2 2"/></svg>',
+  activity: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  'arrow-right': '<svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+  box: '<svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>',
+  database: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>',
+  'refresh-cw': '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10M1 14l4.6 4.4A9 9 0 0 0 20.5 15"/></svg>',
+  'git-branch': '<svg viewBox="0 0 24 24"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>'
+};
+document.querySelectorAll('[data-icon]').forEach(el => {
+  el.innerHTML = ICONS[el.dataset.icon] || '';
+});
+
+/* ---------------- mobile nav ---------------- */
+document.getElementById('navToggle').addEventListener('click', () => {
+  document.getElementById('navMobile').classList.toggle('open');
+});
+
+/* ---------------- reveal on scroll ---------------- */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+/* ---------------- hero typed terminal ---------------- */
+(function heroTyped(){
+  const body = document.getElementById('heroTerm');
+  const extra = document.getElementById('heroExtra');
+  const lines = ['npm install -g talgox', 'talgox'];
+  const speed = 32, startDelay = 500, lineGap = 220;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function makeLineEl(){
+    const d = document.createElement('div');
+    d.className = 'line';
+    d.innerHTML = '<span class="prompt">$</span><span class="txt"></span>';
+    body.insertBefore(d, extra);
+    return d.querySelector('.txt');
+  }
+
+  if (reduced){
+    lines.forEach(l => { makeLineEl().textContent = l; });
+    extra.classList.add('show');
+    return;
+  }
+
+  let li = 0;
+  function typeLine(){
+    if (li >= lines.length){ extra.classList.add('show'); return; }
+    const txt = makeLineEl();
+    const full = lines[li];
+    let ci = 0;
+    (function step(){
+      if (ci <= full.length){
+        txt.textContent = full.slice(0, ci);
+        ci++;
+        setTimeout(step, speed);
+      } else {
+        li++;
+        setTimeout(typeLine, lineGap);
+      }
+    })();
+  }
+  setTimeout(typeLine, startDelay);
+})();
+
+
+/* ---------------- market scanner (ticking simulation) ---------------- */
+(function marketScanner(){
+  let rows = [
+    { name: 'NATGASMINI', state: 'TREND' },
+    { name: 'ZINCMINI', state: 'RANGE' },
+    { name: 'ALUMINIUM', state: 'TREND' },
+    { name: 'LEAD', state: 'TRANSITION' },
+    { name: 'CRUDEOIL', state: 'RANGE' },
+  ];
+  const rowsEl = document.getElementById('scanRows');
+  const qualifiedEl = document.getElementById('qualifiedCount');
+  const trackedEl = document.getElementById('trackedCount');
+  trackedEl.textContent = rows.length;
+
+  function render(){
+    rowsEl.innerHTML = rows.map(r => `
+      <div class="scan-row">
+        <span style="color:#C7D2CC;">${r.name}</span>
+        <span class="state st-${r.state}">${r.state}</span>
+      </div>
+    `).join('');
+    qualifiedEl.textContent = rows.filter(r => r.state === 'TREND').length;
+  }
+  render();
+
+  const states = ['TREND', 'RANGE', 'TRANSITION'];
+  setInterval(() => {
+    rows = rows.map(r => Math.random() > 0.65 ? { ...r, state: states[Math.floor(Math.random() * states.length)] } : r);
+    render();
+  }, 2600);
+})();
+
+/* ---------------- CLI showcase tabs ---------------- */
+(function cliShowcase(){
+  const panels = [
+    { title: 'Toolbox', lines: ['? Select module', '  ❯ Strategy Manager', '    Instrument Manager', '    Backtest Runner', '    Config Manager', '    Runtime Control'] },
+    { title: 'Instrument Manager', lines: ['? Instrument  ZINCMINI26JUNFUT', '  token       141494279', '  lot         1  (1000kg)', '  status      ● active'] },
+    { title: 'Backtest Runner', lines: ['? Strategy    dpi-v2', '? Instrument  NATGASMINI26JUNFUT', '? Timeframe   15m', '? Candle      Heikin Ashi', '  running…    ▓▓▓▓▓▓▓▓░░  82%'] },
+    { title: 'Runtime Control', lines: ['  process     talgo-x-natgas   online', '  process     talgo-x-zinc     online', '  process     talgo-x-alu      online', '  pm2 monit   attached'] },
+  ];
+  const tabsEl = document.getElementById('cliTabs');
+  const bodyEl = document.getElementById('cliPanelBody');
+  const labelEl = document.getElementById('cliPanelLabel');
+  let active = 0;
+
+  function renderPanel(){
+    labelEl.textContent = 'talgox › ' + panels[active].title.toLowerCase().replace(/\s/g, '-');
+    bodyEl.innerHTML = panels[active].lines.map(l =>
+      `<div class="line ${l.trim().startsWith('?') ? 'q' : 'n'}">${l}</div>`
+    ).join('');
+  }
+  function renderTabs(){
+    tabsEl.innerHTML = panels.map((p, i) =>
+      `<button class="cli-tab ${i === active ? 'active' : ''}" data-i="${i}">${p.title}</button>`
+    ).join('');
+    tabsEl.querySelectorAll('.cli-tab').forEach(btn => {
+      btn.addEventListener('click', () => { active = parseInt(btn.dataset.i, 10); renderTabs(); renderPanel(); });
+    });
+  }
+  renderTabs();
+  renderPanel();
+})();
+
+/* ---------------- runtime pills ---------------- */
+(function runtimePills(){
+  const items = [
+    { icon: 'database', label: 'SQLite persistence' },
+    { icon: 'refresh-cw', label: 'PM2 lifecycle' },
+    { icon: 'git-branch', label: 'Broker reconciliation' },
+    { icon: 'terminal', label: 'Structured logging' },
+    { icon: 'activity', label: 'Crash recovery' },
+  ];
+  const root = document.getElementById('runtimePills');
+  root.innerHTML = items.map(it => `
+    <div class="pill glass">
+      <span class="icon" data-icon="${it.icon}"></span>
+      <span class="lbl">${it.label}</span>
+    </div>
+  `).join('');
+  root.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = ICONS[el.dataset.icon] || '');
+})();
+
+/* ---------------- features grid ---------------- */
+(function featuresGrid(){
+  const features = [
+    { title: 'Interactive CLI', desc: 'One toolbox for every workflow, no separate scripts to remember.' },
+    { title: 'Plugin strategies', desc: 'New logic drops into strategies/ with zero changes elsewhere.' },
+    { title: 'OneBrain', desc: 'Market selection, strategy selection, and execution kept separate.' },
+    { title: 'Market scanner', desc: 'Regime classification before any strategy sees an instrument.' },
+    { title: 'Backtesting engine', desc: 'Strategy, instrument, timeframe, candle type — run and read the report.' },
+    { title: 'Runtime management', desc: 'PM2 lifecycle, structured logs, and reconciliation on restart.' },
+    { title: 'Broker APIs', desc: 'Kite Connect gateway with token-safe instrument resolution.' },
+    { title: 'Paper trading', desc: 'Full runtime, simulated fills — for validating before capital.' },
+    { title: 'Live trading', desc: 'The same engine, pointed at a funded account.' },
+    { title: 'Config manager', desc: 'Per-instrument config derived from a single source of truth.' },
+  ];
+  document.getElementById('featGrid').innerHTML = features.map(f => `
+    <div class="feat-cell">
+      <div class="t">${f.title}</div>
+      <div class="d">${f.desc}</div>
+    </div>
+  `).join('');
+})();
+</script>
+
+</body>
+</html>
