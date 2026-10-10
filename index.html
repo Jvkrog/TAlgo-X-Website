@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAlgo-X — Autonomous Trading Infrastructure</title>
-<meta name="description" content="TAlgo-X: build, backtest, deploy, and operate algorithmic trading systems from a single CLI.">
+<meta name="description" content="TAlgo-X: build, backtest, deploy, and operate algorithmic trading systems from a unified CLI and web dashboard.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -335,6 +335,7 @@
   @media (min-width:768px){ .install-panel{ padding:48px; } }
   .install-glow{ position:absolute; top:-96px; left:50%; transform:translateX(-50%); width:420px; height:280px; border-radius:50%; opacity:.3; filter:blur(60px); background:radial-gradient(circle, var(--green) 0%, transparent 70%); z-index:-1; }
   .install-cmds{ margin-top:32px; display:inline-flex; flex-direction:column; align-items:flex-start; gap:8px; border-radius:8px; padding:16px 24px; background:rgba(7,10,8,0.7); backdrop-filter:blur(18px); font-size:13.5px; }
+  .install-note{ margin:24px auto 0; max-width:62ch; font-size:12px; line-height:1.7; color:var(--mute-2); }
   .install-cta{ margin-top:32px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
 
   footer{ border-top:1px solid var(--line-soft); }
@@ -366,7 +367,7 @@
       <a href="#why">Why TAlgo-X</a>
       <a href="#cli">CLI</a>
       <a href="#roadmap">Roadmap</a>
-      <a href="#">Documentation</a>
+      <a href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener">Documentation</a>
     </nav>
     <div class="nav-right">
       <a class="gh" href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener">
@@ -383,7 +384,7 @@
     <a href="#why">Why TAlgo-X</a>
     <a href="#cli">CLI</a>
     <a href="#roadmap">Roadmap</a>
-    <a href="#">Documentation</a>
+    <a href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener">Documentation</a>
     <a class="cta" href="#install">Install CLI →</a>
   </div>
 </header>
@@ -417,7 +418,7 @@
       <div class="hero-links">
         <a class="btn-primary" href="#install"><span class="icon" data-icon="terminal"></span> Install CLI</a>
         <a class="btn-outline" href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> GitHub</a>
-        <a class="btn-text" href="#"><span class="icon" data-icon="book-open"></span> Documentation</a>
+        <a class="btn-text" href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener"><span class="icon" data-icon="book-open"></span> Documentation</a>
       </div>
     </div>
 
@@ -486,6 +487,7 @@
         <div class="compare-col-label mono green">TAlgo-X</div>
         <ul class="compare-list check">
           <li>Platform</li>
+          <li>Multi-instrument (MCX &amp; NSE)</li>
           <li>Plugin architecture</li>
           <li>CLI</li>
           <li>Web Dashboard</li>
@@ -568,12 +570,15 @@
           <li>Scanner</li>
           <li>Strategy SDK</li>
           <li>CLI Packaging</li>
+          <li>Web Dashboard</li>
         </ul>
       </div>
       <div>
         <div class="roadmap-col-label mono">Planned</div>
         <ul class="roadmap-list planned">
-          <li>Dashboard</li>
+          <li>Multi-broker support</li>
+          <li>Portfolio-level execution</li>
+          <li>AI-assisted insights</li>
           <li>SaaS</li>
           <li>Strategy Marketplace</li>
           <li>Cloud Runtime</li>
@@ -589,14 +594,16 @@
       <div class="install-glow"></div>
       <h2 style="margin:0 auto; max-width:none;">Install the CLI and run your first scan.</h2>
       <div class="install-cmds mono">
+        <div><span style="color:var(--green);margin-right:8px;">$</span>git clone https://github.com/Jvkrog/TAlgo-X</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>cd TAlgo-X</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>npm install</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>sudo npm link</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>talgox</div>
       </div>
+      <p class="install-note mono">Requires Node.js, Git and a Kite Connect broker account — paper and live execution both need one. PM2 installs with <span style="color:#C7D2CC;">npm install</span>. Set API key and access token from the CLI or the web dashboard, and start in paper mode.</p>
       <div class="install-cta">
         <a class="btn-primary" style="display:inline-flex;align-items:center;gap:8px;" href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> View on GitHub</a>
-        <a class="btn-outline" href="#"><span class="icon" data-icon="book-open"></span> Read the docs</a>
+        <a class="btn-outline" href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener"><span class="icon" data-icon="book-open"></span> Read the docs</a>
       </div>
     </div>
   </div>
@@ -611,7 +618,7 @@
     </div>
     <div class="footer-links">
       <a href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener">GitHub</a>
-      <a href="#">Documentation</a>
+      <a href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener">Documentation</a>
       <a href="#">Research</a>
       <a href="#">License</a>
     </div>
@@ -775,6 +782,7 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     { title: 'Toolbox', lines: ['? Select module', '  ❯ Strategy Manager', '    Instrument Manager', '    Backtest Runner', '    Config Manager', '    Runtime Control'] },
     { title: 'Instrument Manager', lines: ['? Instrument  ZINCMINI26JUNFUT', '  token       141494279', '  lot         1  (1000kg)', '  status      ● active'] },
     { title: 'Backtest Runner', lines: ['? Strategy    dpi-v2', '? Instrument  NATGASMINI26JUNFUT', '? Timeframe   15m', '? Candle      Heikin Ashi', '  running…    ▓▓▓▓▓▓▓▓░░  82%'] },
+    { title: 'Credentials', lines: ['? Credentials', '  ❯ API key', '    Access token  (expires daily)'] },
     { title: 'Runtime Control', lines: ['  process     talgo-x-natgas   online', '  process     talgo-x-zinc     online', '  process     talgo-x-alu      online', '  pm2 monit   attached'] },
   ];
   const tabsEl = document.getElementById('cliTabs');
@@ -808,6 +816,8 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     { icon: 'git-branch', label: 'Broker reconciliation' },
     { icon: 'terminal', label: 'Structured logging' },
     { icon: 'activity', label: 'Crash recovery' },
+    { icon: 'radio', label: 'Telegram alerts' },
+    { icon: 'box', label: 'Runs on PC, VPS or cloud VM' },
   ];
   const root = document.getElementById('runtimePills');
   root.innerHTML = items.map(it => `
@@ -823,14 +833,17 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 (function featuresGrid(){
   const features = [
     { title: 'Interactive CLI', desc: 'The terminal toolbox stays fully supported — nothing about it is deprecated by the dashboard.' },
-    { title: 'Web Dashboard', desc: 'A live operator view of the same runtime — same data, same controls, browser-based.' },
+    { title: 'Web Dashboard', desc: 'A live operator view of the same runtime — engine control, positions and PnL, live logs, broker status and credentials, browser-based.' },
     { title: 'Plugin strategies', desc: 'New logic drops into strategies/ with zero changes elsewhere.' },
     { title: 'OneBrain', desc: 'Market selection, strategy selection, and execution kept separate.' },
     { title: 'Market scanner', desc: 'Regime classification before any strategy sees an instrument.' },
     { title: 'Backtesting engine', desc: 'Strategy, instrument, timeframe, candle type — run and read the report.' },
     { title: 'Runtime management', desc: 'PM2 lifecycle, structured logs, and reconciliation on restart.' },
-    { title: 'Broker APIs', desc: 'Kite Connect gateway with token-safe instrument resolution.' },
-    { title: 'Paper trading', desc: 'Full runtime, simulated fills — for validating before capital.' },
+    { title: 'Broker APIs', desc: 'Kite Connect gateway (REST and WebSocket) with token-safe instrument resolution.' },
+    { title: 'MCX and NSE instruments', desc: 'Instruments are fetched from the broker API, with contract roll policies and pins.' },
+    { title: 'Isolated contexts', desc: 'One brain, multiple contexts — per-instrument state, position and config stay separate.' },
+    { title: 'Directional hedging', desc: 'Dual-hedge and hedge-pair engines, each with its own backtests and reports.' },
+    { title: 'Paper trading', desc: 'Full runtime, simulated fills — for validating before capital. Needs a broker account.' },
     { title: 'Live trading', desc: 'The same engine, pointed at a funded account.' },
     { title: 'Config manager', desc: 'Per-instrument config derived from a single source of truth.' },
   ];
