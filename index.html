@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TAlgo-X — Autonomous Trading Infrastructure</title>
-<meta name="description" content="TAlgo-X: build, backtest, deploy, and operate algorithmic trading systems from a unified CLI and web dashboard.">
+<meta name="description" content="TAlgo-X: build, backtest, deploy, and operate algorithmic trading systems from a terminal toolbox and a live web dashboard — with a market-state scanner, hedge engines, and observer-only AI trade review.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -286,9 +286,11 @@
   .scan-row{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--line-soft); font-size:13px; }
   .scan-row:last-child{ border-bottom:none; }
   .scan-row .state{ transition:color .5s; }
-  .st-TREND{ color:var(--green); }
-  .st-RANGE{ color:var(--mute-2); }
-  .st-TRANSITION{ color:var(--amber); }
+  .st-TRENDING, .st-BREAKOUT{ color:var(--green); }
+  .st-RANGING{ color:var(--amber); }
+  .st-HIGH_VOLATILITY{ color:#FF7A7A; }
+  .st-LOW_VOLATILITY, .st-UNKNOWN{ color:var(--mute-2); }
+  .scan-row .conf{ color:var(--dim); font-size:11.5px; margin-left:14px; }
 
   /* CLI showcase */
   .cli-grid{ margin-top:40px; display:grid; gap:24px; }
@@ -298,8 +300,9 @@
   .cli-tab{ text-align:left; font-size:13px; padding:10px 14px; border-radius:6px; white-space:nowrap; border:1px solid transparent; background:var(--bg-2); backdrop-filter:blur(18px); color:var(--mute-2); cursor:pointer; transition:color .15s; }
   .cli-tab:hover{ color:#C7D2CC; }
   .cli-tab.active{ background:rgba(14,59,35,0.4); color:var(--green); border-color:rgba(53,245,138,0.3); }
-  .cli-panel .term-body{ min-height:160px; }
-  .cli-panel .line{ margin-bottom:6px; }
+  .cli-panel{ min-width:0; }
+  .cli-panel .term-body{ min-height:160px; overflow-x:auto; }
+  .cli-panel .line{ margin-bottom:6px; white-space:pre; min-height:1.2em; }
   .cli-panel .line.q{ color:var(--green); }
   .cli-panel .line.n{ color:#C7D2CC; }
 
@@ -411,10 +414,10 @@
     <div class="hero-copy">
       <div class="badge">
         <span class="dot"></span>
-        <span class="mono">CLI · Web Dashboard · Runtime · SDK</span>
+        <span class="mono">CLI · WebDash · Runtime · Backtesting · AI review</span>
       </div>
       <h1>The operating system for algorithmic trading infrastructure.</h1>
-      <p class="tagline">TAlgo-X is a platform, not a script — a market scanner, a decision layer, a plugin strategy SDK, and a runtime, operated from a CLI or a web dashboard. Neither one replaces the other.</p>
+      <p class="tagline">TAlgo-X is a platform, not a script — 20+ built-in strategies and a custom strategy builder, a market-state scanner, hedge engines, a backtester, and a PM2-managed runtime, operated from a terminal toolbox or a live web dashboard with charts and an order book. Neither one replaces the other.</p>
       <div class="hero-links">
         <a class="btn-primary" href="#install"><span class="icon" data-icon="terminal"></span> Install CLI</a>
         <a class="btn-outline" href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> GitHub</a>
@@ -431,7 +434,7 @@
         </div>
         <div class="term-body mono" id="heroTerm">
           <div class="term-extra" id="heroExtra">
-            <div class="head">▲ TALGO-X <span class="v">runtime v0.1</span></div>
+            <div class="head">▲ TALGO-X <span class="v">runtime</span></div>
             <div>scanning instruments…</div>
             <div class="row3">3 qualified → OneBrain</div>
             <div class="row4">? select mode <span class="sel">Live · Paper · Backtest</span></div>
@@ -446,7 +449,7 @@
   <div class="wrap">
     <div class="label"><span class="sl mono">//</span><span class="sr mono">OneBrain</span></div>
     <h2>One decision path, not a hardcoded indicator.</h2>
-    <p class="lead">Most bots wire an indicator straight to an order. TAlgo-X puts a dedicated decision layer in between — OneBrain reads the scanner's read on the market and the strategy's intent, and only then does anything reach execution.</p>
+    <p class="lead">Most bots wire an indicator straight to an order. In TAlgo-X the engine is a dedicated decision layer: it takes the strategy's signal, runs it through the entry gates and risk controls you configured, and only then places an order. The market-state scanner feeds it context through a single client, and a stale or missing profile reads as UNKNOWN rather than as current.</p>
     <div class="compare-grid">
       <div class="compare-col compare-col--traditional">
         <div class="compare-col-label mono">Traditional Systems</div>
@@ -460,7 +463,9 @@
         <div class="compare-connector"></div>
         <div class="compare-node highlight"><span class="icon" data-icon="cpu"></span> OneBrain</div>
         <div class="compare-connector"></div>
-        <div class="compare-node"><span class="icon" data-icon="file-code"></span> Strategy</div>
+        <div class="compare-node"><span class="icon" data-icon="file-code"></span> Strategy signal</div>
+        <div class="compare-connector"></div>
+        <div class="compare-node"><span class="icon" data-icon="layers"></span> Entry gates &amp; risk</div>
         <div class="compare-connector"></div>
         <div class="compare-node"><span class="icon" data-icon="activity"></span> Execution</div>
       </div>
@@ -488,13 +493,15 @@
         <ul class="compare-list check">
           <li>Platform</li>
           <li>Multi-instrument (MCX &amp; NSE)</li>
-          <li>Plugin architecture</li>
-          <li>CLI</li>
-          <li>Web Dashboard</li>
-          <li>Market Scanner</li>
-          <li>Backtesting</li>
-          <li>Runtime</li>
-          <li>Configuration Manager</li>
+          <li>20+ strategies + custom builder</li>
+          <li>CLI toolbox + WebDash</li>
+          <li>Live chart &amp; order book</li>
+          <li>Market State Engine</li>
+          <li>Backtesting with reports</li>
+          <li>Hedge pairs &amp; dual hedge</li>
+          <li>Entry gates &amp; risk limits</li>
+          <li>AI trade review (observer-only)</li>
+          <li>PM2 runtime &amp; recovery</li>
         </ul>
       </div>
     </div>
@@ -504,18 +511,18 @@
 <section id="scanner" class="reveal">
   <div class="wrap two-col">
     <div>
-      <div class="label"><span class="sl mono">//</span><span class="sr mono">Market Scanner</span></div>
-      <h2>Scan before you commit capital.</h2>
-      <p class="lead">TAlgo-X classifies every configured instrument into a market regime before OneBrain ever sees it. Only instruments in a tradeable state get passed downstream — everything else sits out.</p>
+      <div class="label"><span class="sl mono">//</span><span class="sr mono">Market State Engine</span></div>
+      <h2>Profile the market before you commit capital.</h2>
+      <p class="lead">A separate scanner builds a profile for every watched instrument — trend, volatility, participation, structure and confidence — and keeps its own watchlist, independent of which engines are running. Profiles and structure transitions live in their own database, so an engine never depends on it to place or manage an order.</p>
       <div class="stats mono">
-        <div><div class="n green" id="qualifiedCount">0</div><div class="lbl">qualified now</div></div>
+        <div><div class="n green" id="qualifiedCount">0</div><div class="lbl">trending / breakout</div></div>
         <div><div class="n" id="trackedCount">0</div><div class="lbl">tracked instruments</div></div>
       </div>
     </div>
     <div class="glass">
       <div class="scan-head">
-        <span class="mono" style="font-size:11.5px;color:var(--dim);">today's scan</span>
-        <span class="live mono"><span class="dot"></span> live</span>
+        <span class="mono" style="font-size:11.5px;color:var(--dim);">sample scan · illustrative</span>
+        <span class="live mono"><span class="dot"></span> demo</span>
       </div>
       <div class="mono" id="scanRows"></div>
     </div>
@@ -565,12 +572,16 @@
       <div>
         <div class="roadmap-col-label mono green">Shipped</div>
         <ul class="roadmap-list done">
-          <li>Runtime</li>
-          <li>Toolbox</li>
-          <li>Scanner</li>
-          <li>Strategy SDK</li>
-          <li>CLI Packaging</li>
+          <li>Runtime &amp; recovery</li>
+          <li>Toolbox (CLI)</li>
           <li>Web Dashboard</li>
+          <li>Live chart &amp; order book</li>
+          <li>Market State Engine</li>
+          <li>Strategy library &amp; custom builder</li>
+          <li>Backtesting</li>
+          <li>Hedge pairs &amp; dual hedge</li>
+          <li>TAlgo-AI trade review</li>
+          <li>CLI packaging</li>
         </ul>
       </div>
       <div>
@@ -578,7 +589,6 @@
         <ul class="roadmap-list planned">
           <li>Multi-broker support</li>
           <li>Portfolio-level execution</li>
-          <li>AI-assisted insights</li>
           <li>SaaS</li>
           <li>Strategy Marketplace</li>
           <li>Cloud Runtime</li>
@@ -592,15 +602,16 @@
   <div class="wrap">
     <div class="install-panel glass">
       <div class="install-glow"></div>
-      <h2 style="margin:0 auto; max-width:none;">Install the CLI and run your first scan.</h2>
+      <h2 style="margin:0 auto; max-width:none;">Install it and run your first paper session.</h2>
       <div class="install-cmds mono">
         <div><span style="color:var(--green);margin-right:8px;">$</span>git clone https://github.com/Jvkrog/TAlgo-X</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>cd TAlgo-X</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>npm install</div>
-        <div><span style="color:var(--green);margin-right:8px;">$</span>sudo npm link</div>
+        <div><span style="color:var(--green);margin-right:8px;">$</span>npm link</div>
         <div><span style="color:var(--green);margin-right:8px;">$</span>talgox</div>
+        <div><span style="color:var(--green);margin-right:8px;">$</span>npm run webdash</div>
       </div>
-      <p class="install-note mono">Requires Node.js, Git and a Kite Connect broker account — paper and live execution both need one. PM2 installs with <span style="color:#C7D2CC;">npm install</span>. Set API key and access token from the CLI or the web dashboard, and start in paper mode.</p>
+      <p class="install-note mono">Requires Node.js 18+, Git and a Kite Connect broker account — paper and live execution both need one. PM2 installs with <span style="color:#C7D2CC;">npm install</span>. The dashboard opens at <span style="color:#C7D2CC;">localhost:4790</span>; set a dashboard PIN before exposing it to any network. Set the API key and access token from the CLI or the dashboard, and start in paper mode. Research software, not financial advice.</p>
       <div class="install-cta">
         <a class="btn-primary" style="display:inline-flex;align-items:center;gap:8px;" href="https://github.com/Jvkrog/TAlgo-X" target="_blank" rel="noopener"><span class="icon" data-icon="github"></span> View on GitHub</a>
         <a class="btn-outline" href="https://github.com/Jvkrog/TAlgo-X#readme" target="_blank" rel="noopener"><span class="icon" data-icon="book-open"></span> Read the docs</a>
@@ -747,11 +758,11 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 /* ---------------- market scanner (ticking simulation) ---------------- */
 (function marketScanner(){
   let rows = [
-    { name: 'NATGASMINI', state: 'TREND' },
-    { name: 'ZINCMINI', state: 'RANGE' },
-    { name: 'ALUMINIUM', state: 'TREND' },
-    { name: 'LEAD', state: 'TRANSITION' },
-    { name: 'CRUDEOIL', state: 'RANGE' },
+    { name: 'NATGASMINI', state: 'TRENDING', conf: 74 },
+    { name: 'ZINCMINI', state: 'RANGING', conf: 61 },
+    { name: 'ALUMINIUM', state: 'BREAKOUT', conf: 68 },
+    { name: 'LEAD', state: 'LOW_VOLATILITY', conf: 55 },
+    { name: 'CRUDEOIL', state: 'HIGH_VOLATILITY', conf: 70 },
   ];
   const rowsEl = document.getElementById('scanRows');
   const qualifiedEl = document.getElementById('qualifiedCount');
@@ -762,16 +773,16 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     rowsEl.innerHTML = rows.map(r => `
       <div class="scan-row">
         <span style="color:#C7D2CC;">${r.name}</span>
-        <span class="state st-${r.state}">${r.state}</span>
+        <span><span class="state st-${r.state}">${r.state}</span><span class="conf">${r.conf}%</span></span>
       </div>
     `).join('');
-    qualifiedEl.textContent = rows.filter(r => r.state === 'TREND').length;
+    qualifiedEl.textContent = rows.filter(r => r.state === 'TRENDING' || r.state === 'BREAKOUT').length;
   }
   render();
 
-  const states = ['TREND', 'RANGE', 'TRANSITION'];
+  const states = ['TRENDING', 'BREAKOUT', 'RANGING', 'HIGH_VOLATILITY', 'LOW_VOLATILITY'];
   setInterval(() => {
-    rows = rows.map(r => Math.random() > 0.65 ? { ...r, state: states[Math.floor(Math.random() * states.length)] } : r);
+    rows = rows.map(r => Math.random() > 0.65 ? { ...r, state: states[Math.floor(Math.random() * states.length)], conf: 50 + Math.floor(Math.random() * 40) } : r);
     render();
   }, 2600);
 })();
@@ -779,11 +790,12 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 /* ---------------- CLI showcase tabs ---------------- */
 (function cliShowcase(){
   const panels = [
-    { title: 'Toolbox', lines: ['? Select module', '  ❯ Strategy Manager', '    Instrument Manager', '    Backtest Runner', '    Config Manager', '    Runtime Control'] },
-    { title: 'Instrument Manager', lines: ['? Instrument  ZINCMINI26JUNFUT', '  token       141494279', '  lot         1  (1000kg)', '  status      ● active'] },
-    { title: 'Backtest Runner', lines: ['? Strategy    dpi-v2', '? Instrument  NATGASMINI26JUNFUT', '? Timeframe   15m', '? Candle      Heikin Ashi', '  running…    ▓▓▓▓▓▓▓▓░░  82%'] },
-    { title: 'Credentials', lines: ['? Credentials', '  ❯ API key', '    Access token  (expires daily)'] },
-    { title: 'Runtime Control', lines: ['  process     talgo-x-natgas   online', '  process     talgo-x-zinc     online', '  process     talgo-x-alu      online', '  pm2 monit   attached'] },
+    { title: 'Toolbox', lines: ['  #  INSTRUMENT            LOTS  MODE   STATUS', '  1. ZINCMINI/DMIDC      1     PAPER  ● online', '  2. NATGASMINI/DMIDC    1     PAPER  ● online', '', '  A Add     S Start    L Logs     B Backtest', '  E Creds   P Edit Param   V Risk Mgmt   G Dual Hedge'] },
+    { title: 'Backtest', lines: ['? Strategy        Dynamic Mid (Color-Coded, ATR SL)', '? Instrument      NATGASMINI', '? Timeframe       1h', '? Candle          Heikin-Ashi', '? Days back       30', '? Scalp target ₹  15000', '? After a target hit, cool down for the day? y', '  running…        ▓▓▓▓▓▓▓▓░░  82%'] },
+    { title: 'Edit Param', lines: ['? Timeframe  (5m/15m/30m/1h/1d, current: 1h)', '? Lot multiplier  (current: 5000)', '? Lots  (current: 1)', '? Band step in price points', '? Max daily loss in rupees'] },
+    { title: 'Risk Mgmt', lines: ['  choppiness filter        off', '  volume above SMA         off', '  long-candle block        on   ATR(14) x1.5, 2 candle cooldown', '  max losing trades/day    2', '  max daily loss           none'] },
+    { title: 'Logs', lines: ['  $ pm2 logs            coloured (with talgo-shell.sh), wraps to your screen', '  $ npm run logs zinc   filter by instrument', '  $ npm run logs -n 40  more history'] },
+    { title: 'Credentials', lines: ['? Credentials', '  ❯ Kite API key / secret', '    Access token  (refresh daily)'] },
   ];
   const tabsEl = document.getElementById('cliTabs');
   const bodyEl = document.getElementById('cliPanelBody');
@@ -814,8 +826,9 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
     { icon: 'database', label: 'SQLite persistence' },
     { icon: 'refresh-cw', label: 'PM2 lifecycle' },
     { icon: 'git-branch', label: 'Broker reconciliation' },
-    { icon: 'terminal', label: 'Structured logging' },
-    { icon: 'activity', label: 'Crash recovery' },
+    { icon: 'activity', label: 'P&L booked from broker fills' },
+    { icon: 'terminal', label: 'Coloured, width-aware logs' },
+    { icon: 'activity', label: 'Restart recovery' },
     { icon: 'radio', label: 'Telegram alerts' },
     { icon: 'box', label: 'Runs on PC, VPS or cloud VM' },
   ];
@@ -832,20 +845,21 @@ document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 /* ---------------- features grid ---------------- */
 (function featuresGrid(){
   const features = [
-    { title: 'Interactive CLI', desc: 'The terminal toolbox stays fully supported — nothing about it is deprecated by the dashboard.' },
-    { title: 'Web Dashboard', desc: 'A live operator view of the same runtime — engine control, positions and PnL, live logs, broker status and credentials, browser-based.' },
-    { title: 'Plugin strategies', desc: 'New logic drops into strategies/ with zero changes elsewhere.' },
-    { title: 'OneBrain', desc: 'Market selection, strategy selection, and execution kept separate.' },
-    { title: 'Market scanner', desc: 'Regime classification before any strategy sees an instrument.' },
-    { title: 'Backtesting engine', desc: 'Strategy, instrument, timeframe, candle type — run and read the report.' },
-    { title: 'Runtime management', desc: 'PM2 lifecycle, structured logs, and reconciliation on restart.' },
-    { title: 'Broker APIs', desc: 'Kite Connect gateway (REST and WebSocket) with token-safe instrument resolution.' },
-    { title: 'MCX and NSE instruments', desc: 'Instruments are fetched from the broker API, with contract roll policies and pins.' },
-    { title: 'Isolated contexts', desc: 'One brain, multiple contexts — per-instrument state, position and config stay separate.' },
-    { title: 'Directional hedging', desc: 'Dual-hedge and hedge-pair engines, each with its own backtests and reports.' },
-    { title: 'Paper trading', desc: 'Full runtime, simulated fills — for validating before capital. Needs a broker account.' },
-    { title: 'Live trading', desc: 'The same engine, pointed at a funded account.' },
-    { title: 'Config manager', desc: 'Per-instrument config derived from a single source of truth.' },
+    { title: 'Terminal toolbox', desc: 'Add, start, stop, restart, roll, edit and back-test instruments from one menu that fits your screen — desktop or phone over SSH.' },
+    { title: 'Web dashboard', desc: 'Engine cards with live price, day change in points and percent, position and P&L, logs, and add / edit / backtest forms. The CLI stays fully supported.' },
+    { title: 'Live chart & order book', desc: 'Raw, Heikin-Ashi and Range Bar candles with a month of history, strategy overlays, touch and axis zoom, a pop-out page for a second monitor, and a live market-depth panel.' },
+    { title: '20+ strategies', desc: 'Dynamic Step Band family, ALMA bands, MA Slope, DPI, Daily HA Bias and more — each on its own timeframe, editable after deploy.' },
+    { title: 'Custom strategy builder', desc: 'Compose indicators with entry and exit conditions in the toolbox or dashboard, then back-test and run them like any built-in.' },
+    { title: 'Entry gates & risk controls', desc: 'Choppiness, volume, long-candle, higher-timeframe and daily Heikin-Ashi gates, ATR or hard stop-loss, daily-loss and session-target limits, and losing-trade / losing-reversal caps.' },
+    { title: 'Scalp target with cooldown', desc: 'A rupee target per trade, then stay flat for the day, switch to a new target, or switch to a fixed stop. Also in the backtester.' },
+    { title: 'Backtesting engine', desc: 'Strategy, instrument, timeframe, candle type and date range, with the same gates and limits as live — then a report you can read in the terminal or the dashboard.' },
+    { title: 'Fill-accurate live P&L', desc: 'Live trades are booked at the broker\'s actual entry and exit fills, not the signal price, so limits and day totals use real numbers.' },
+    { title: 'Market State Engine', desc: 'Trend, volatility, participation, structure and confidence per instrument, kept in its own database and never required to place an order.' },
+    { title: 'Hedge workflows', desc: 'Hedge pairs, and a dual-hedge engine that drives separate long and short legs across two broker accounts — each with its own backtests and reports.' },
+    { title: 'TAlgo-AI trade review', desc: 'Closed trades reviewed from the SQLite journal, with aggregate summaries. Observer-only: it never places, changes or closes an order.' },
+    { title: 'Runtime management', desc: 'PM2 lifecycle, per-engine logs, SQLite journals, Telegram alerts, and reconciliation against the broker on restart.' },
+    { title: 'Paper and live', desc: 'The same engine in both modes; going live needs an explicit confirmation. Both need a broker account for data.' },
+    { title: 'MCX and NSE', desc: 'Instruments resolved from the broker API, with contract roll policies and pins. Kite Connect is the supported broker today.' },
   ];
   document.getElementById('featGrid').innerHTML = features.map(f => `
     <div class="feat-cell">
